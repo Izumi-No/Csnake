@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(MeuProjeto)
 
-# Configurar o compilador para usar o Clang
-set(CMAKE_C_COMPILER clang)
+
 
 # Definir as opções de compilação para o Clang
 set(CMAKE_C_FLAGS "-Wall -Wextra -std=c11")
