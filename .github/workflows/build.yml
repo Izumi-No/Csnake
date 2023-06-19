@@ -1,50 +1,51 @@
-name: Build
-
+name: Cross Compile SDL2 C project with CMake and Post Release
 on:
   push:
     branches:
-      - main
+      - main  # Replace with your project's main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up CMake
-      run: sudo apt-get install -y cmake
-
-    - name: Set up SDL2
-      run: sudo apt-get install -y libsdl2-dev
-
-    - name: Build
-      run: |
-        mkdir build
-        cd build
-        cmake ..
-        make
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Build artifacts for ${{ github.ref }}
-      timeout-minutes: 10
-
-    - name: Upload Build Artifacts
-      id: upload_artifacts
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build/my_application
-        asset_name: my_application
-        asset_content_type: application/octet-stream
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libsdl2-dev
+      
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_C_COMPILER=clang ..
+          make
+      
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: built-artifacts
+          path: build
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/
+          asset_name: built-artifacts.zip
+          asset_content_type: application/zip
